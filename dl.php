@@ -44,7 +44,7 @@ if (!defined('awsAccessKey')) define('awsAccessKey', 'AKIAJIOABZNYPODUHRIA');
 if (!defined('awsSecretKey')) define('awsSecretKey', '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');
 
 //instantiate the class  
-$s3 = new S3(awsAccessKey, awsSecretKey);
+$s3 = new S3(awsAccessKey, awsSecretKey, false);
  $fp = fopen($storagepath.$filehash, "wb");
 $s3->getObject("cdn.gers.pl", $filehash, $fp);
 

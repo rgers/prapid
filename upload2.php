@@ -36,15 +36,15 @@ if (!defined('awsAccessKey')) define('awsAccessKey', 'AKIAJIOABZNYPODUHRIA');
 if (!defined('awsSecretKey')) define('awsSecretKey', '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');
 
 //instantiate the class  
-$s3 = new S3(awsAccessKey, awsSecretKey);
+$s3 = new S3(awsAccessKey, awsSecretKey, false);
   //create a new bucket
 $s3->putBucket("cdn.gers.pl", S3::ACL_PRIVATE);
 
 //move the file
 if ($s3->putObjectFile($uploadpath.$plik_nazwa, "cdn.gers.pl", $fid, S3::ACL_PUBLIC_READ)) {
-    echo "<bt />Wysy³anie powiod³o siê.";
+    echo "<bt />Wysyï¿½anie powiodï¿½o siï¿½.";
 }else{
-    echo "<br />Przykro nam, niestety wysy³anie nie powiod³o siê.";
+    echo "<br />Przykro nam, niestety wysyï¿½anie nie powiodï¿½o siï¿½.";
 }
 unlink($uploadpath.$plik_nazwa);
 

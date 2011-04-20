@@ -1,12 +1,70 @@
 <?php
+/**
+Revision 1.5
+Rewritten by Ricky Mataka www.DivorceTheBoss.com
+Date: June 19, 2010.
+History: Full Jquery Implimentation for Classic Form Demo
+History: js/handlers.js Eliminated -- Used Plugin to Bind
 
-// CHANGE EVERYTHING BELOW
+Warranty: None, use at your own risk.
+License: Follow SWFUpload license.
+SWFUpload unmodified can be found here: http://www.swfupload.org/
+**/
 
-define(AWS_ACCESS_KEY_ID,'AKIAJIOABZNYPODUHRIA');
-define(AWS_SECRET_ACCESS_KEY,'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');
-$S3_BUCKET = 'cdn.gers.pl';
-$SUCCESS_REDIRECT = "http://onet.pl";
-$SWFRoot = "http://prapid.gers.pl/amazon_upload/";
+if (!class_exists('S3')) require_once 's3/S3.php';
+
+// AWS access info
+if (!defined('awsAccessKey')) define('awsAccessKey', 'AKIAITQQDYV5WK4LLYWQ');
+if (!defined('awsSecretKey')) define('awsSecretKey', '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');
+
+// Check for CURL
+if (!extension_loaded('curl') && !@dl(PHP_SHLIB_SUFFIX == 'so' ? 'curl.so' : 'php_curl.dll'))
+	exit("\nERROR: CURL extension not loaded\n\n");
+
+
+S3::setAuth(awsAccessKey, awsSecretKey);
+
+$bucket = 'isdmusic';
+$path = ''; // Can be empty ''
+
+$lifetime = 3600; // Period for which the parameters are valid
+$maxFileSize = (1024 * 1024 * 50); // 50 MB
+
+$metaHeaders = array('uid' => 123);
+$requestHeaders = array(
+    'Content-Type' => 'application/octet-stream',
+    'Content-Disposition' => 'attachment; filename=${filename}'
+);
+
+$params = S3::getHttpUploadPostParams(
+    $bucket,
+    $path,
+    S3::ACL_PUBLIC_READ,
+    $lifetime,
+    $maxFileSize,
+    201, // Or a URL to redirect to on success
+    $metaHeaders,
+    $requestHeaders,
+    false // False since we're not using flash
+);
+
+
+foreach ($params as $p => $v) {
+        echo $p." ".$v;
+}
+
+//echo $params->AWSAccessKeyId;
+//echo $params->policy;
+echo $params->Content-Type;
+echo $params->attachment;
+echo $params->uid;
+
+
+//echo awsAccessKey;
+
+$S3_BUCKET = 'isdmusic';
+$SUCCESS_REDIRECT = "http://isdtest.users34.interdns.co.uk/";
+$SWFRoot = "http://isdtest.users34.interdns.co.uk/";
 
 $isMacUser = (preg_match("/macintosh/",strtolower($_SERVER['HTTP_USER_AGENT'])) ? true : false);
 
@@ -15,57 +73,38 @@ if ( !isset($S3_BUCKET) || $S3_BUCKET == 'AWS_BUCKET' ) {
   exit(0);
 }
 
-$MAX_FILE_SIZE = 500 * 1048576;
-$expTime = time() + (1 * 60 * 60);
-$expTimeStr = gmdate('Y-m-d\TH:i:s\Z', $expTime);
-$policyDoc = '{
-        "expiration": "' . $expTimeStr . '",
-        "conditions": [
-        {"bucket": "' . $S3_BUCKET . '"},
-        ["starts-with", "$key", ""],
-        {"acl": "public-read"},
-        ["content-length-range", 0, '. $MAX_FILE_SIZE .'],
-        {"success_action_status": "201"},
-        ["starts-with", "$Filename", ""],
-        ["starts-with", "$Content-Type", "image/"]
-      ]
-}';
-$policyDoc = implode(explode('\r', $policyDoc));
-$policyDoc = implode(explode('\n', $policyDoc));
-$policyDoc64 = base64_encode($policyDoc);
-$sigPolicyDoc = base64_encode(hash_hmac("sha1", $policyDoc64, AWS_SECRET_ACCESS_KEY, TRUE));
+/*
+  Flash 10.1 issue, omitted the below from the policy
+        {"success_action_redirect": "' . $SUCCESS_REDIRECT . '"},
+*/
 
+//$MAX_FILE_SIZE = 50 * 1048576;
+//$expTime = time() + (1 * 60 * 60);
+//$expTimeStr = gmdate('Y-m-d\TH:i:s\Z', $expTime);
+//$policyDoc = '{
+//        "expiration": "' . $expTimeStr . '",
+//        "conditions": [
+//        {"bucket": "' . $S3_BUCKET . '"},
+//        ["starts-with", "$key", ""],
+//        {"acl": "public-read"},
+//        ["content-length-range", 0, '. $MAX_FILE_SIZE .'],
+//        {"success_action_status": "201"},
+//        ["starts-with", "$Filename", ""], 
+//        ["starts-with", "$Content-Type", "image/"]
+//      ]
+//}';
+//$policyDoc = implode(explode('\r', $policyDoc));
+//$policyDoc = implode(explode('\n', $policyDoc));
+//$policyDoc64 = base64_encode($policyDoc);
+//$sigPolicyDoc = base64_encode(hash_hmac("sha1", $policyDoc64, awsSecretKey, TRUE));
+   
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" >
-    <head>
-        <meta http-equiv="Content-type" content="text/html;
-              charset=utf-8" />
-        <title>Prześlij Pliki</title>
-        <!-- <link href="css/default.css" rel="stylesheet" type="text/css" /> -->
-        <link href="css/uploadify.css" rel="stylesheet" type="text/css" />
-        <link rel="stylesheet" href="css/jquery.fancybox-1.3.0.css" type="text/css" media="screen" />
-     <style type="text/css">
-            table table td {
-                width: 250px;
-                white-space: nowrap;
-                padding-right: 5px;
-            }
-            table table tr:nth-child(2n+1) {
-                background-color: #EEEEEE;
-            }
-            table table td:first-child {
-                font-weight: bold;
-            }
-
-            table table td:nth-child(2) {
-                text-align: right;
-                font-family: monospaced;
-            }
-
-        </style>
-  <!--  <?php //include 'jsfuncs.php'; ?> -->
-        <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<head>
+<title>SWFUpload Demos - Classic Form Demo</title>
+<link href="default.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
 <script type="text/javascript">
 	google.load("jquery", "1.3");
 </script>
@@ -82,33 +121,37 @@ var master = null;
 var MacMinSizeUpload = 150000; // 150k, this is not cool :(
 var MacDelay = 10000; // 10 secs.
 var isMacUser = <?php echo ($isMacUser ? 'true' : 'false'); ?>;
-var successURL = '<?php echo ($SUCCESS_REDIRECT); ?>';
+var successURL = '<?php echo ($SUCCESS_REDIRECT); ?>';	
 
-$(function(){
-	$('#swfupload-control').swfupload({
-		upload_url: "http://<?=$S3_BUCKET?>.s3.amazonaws.com/",
-		post_params: {"AWSAccessKeyId":"<?=AWS_ACCESS_KEY_ID?>", "key":"${filename}", "acl":"public-read", "policy":"<?=$policyDoc64?>", "signature":"<?=$sigPolicyDoc?>","success_action_status":"201", "content-type":"image/"},
-		http_success : [201],
+
+
+
+
+$(function(){	
+	$('#swfupload-control').swfupload({		
+		upload_url: "http://<?php echo $bucket; ?>.s3.amazonaws.com/",
+		post_params: {"AWSAccessKeyId":"<?php echo $params->AWSAccessKeyId; ?>", "key":"${filename}", "acl":"public-read", "policy":"<?php echo $params->policy; ?>", "signature":"<?php echo $params->signature; ?>","success_action_status":"201", "content-type":"application/octet-stream", "Content-Disposition":"attachment; filename=${filename}", "uid":"123"},
+		http_success : [201], 
 		assume_success_timeout : <?php echo ($isMacUser ? 5 : 0); ?>,
 
 		// File Upload Settings
 		file_post_name: 'file',
-		file_size_limit : "2020240",    // 20 MB
+		file_size_limit : "20240",    // 20 MB
 		file_types : "*.*",			// or you could use something like: "*.doc;*.wpd;*.pdf",
 		file_types_description : "All Files",
 		file_upload_limit : "0",
-		file_queue_limit : "1",
-
+		file_queue_limit : "1",			
+		
 		button_image_url : "XPButtonUploadText_61x22.png",
 		button_placeholder_id : 'mybutton',
 		button_placeholder : $('#mybutton'),
 		button_width: 61,
-		button_height: 22,
-
+		button_height: 22,		
+		
 		button_window_mode: SWFUpload.WINDOW_MODE.TRANSPARENT,
 		button_cursor: SWFUpload.CURSOR.HAND,
 		moving_average_history_size: 10,
-
+	   
 		// Flash Settings
 		flash_url : "<?=$SWFRoot?>swfupload.swf",
 		custom_settings : {
@@ -123,26 +166,26 @@ $(function(){
 		var swfu = $.swfupload.getInstance('#swfupload-control');
 		var txtFileName = document.getElementById("txtFileName");
 		txtFileName.value = "";
-		swfu.cancelUpload();
+		swfu.cancelUpload();	
 	})
-
+	
 	.bind('uploadError', function(event, file, errorCode, message){
 		var swfu = $.swfupload.getInstance('#swfupload-control');
 		try {
-
+			
 			if (errorCode === SWFUpload.UPLOAD_ERROR.FILE_CANCELLED) {
 				// Don't show cancelled error boxes
 				return;
 			}
 			var txtFileName = document.getElementById("txtFileName");
 			txtFileName.value = "";
-			validateForm();
-
+			validateForm();		
+			
 			file.id = "singlefile";
 			var progress = new FileProgress(file, swfu.customSettings.progressTarget);
 			progress.setError();
 			progress.toggleCancel(false);
-
+	
 			switch (errorCode) {
 			case SWFUpload.UPLOAD_ERROR.HTTP_ERROR:
 				progress.setStatus("Upload Error: " + message);
@@ -186,15 +229,15 @@ $(function(){
 			}
 		} catch (ex) {
 			swfu.debug(ex);
-		}
+		}		
 	})
-
+	
 	.bind('fileQueued', function(event, file){
 		try {
 			var txtFileName = document.getElementById("txtFileName");
 			txtFileName.value = file.name;
 		} catch (e) {
-		}
+		}		
 	})
 	.bind('fileQueueError', function(event, file, errorCode, message){
 		alert('Size of the file '+file.name+' is greater than limit');
@@ -202,17 +245,17 @@ $(function(){
 	.bind('fileDialogComplete', function(event, numFilesSelected, numFilesQueued){
 		var swfu = $.swfupload.getInstance('#swfupload-control');
 		var btnSubmit=$('#btnSubmit');
-		btnSubmit.click(function(){
+		btnSubmit.click(function(){	
 			try {
 				swfu.startUpload();
 			} catch (ex) {
-
+		
 			}
-			return false;
-		});
+			return false;			
+		});	
 		validateForm();
 	})
-
+	
 	.bind('uploadStart', function(event, file){
 		var swfu = $.swfupload.getInstance('#swfupload-control');
 		try {
@@ -223,19 +266,19 @@ $(function(){
 			updateDisplay.call(swfu,file);
 		}
 		catch (ex) {}
-		return true;
+		return true;	
 	})
-
-	.bind('uploadProgress', function(event, file, bytesLoaded, bytesTotal){
+	
+	.bind('uploadProgress', function(event, file, bytesLoaded, bytesTotal){		
 		var swfu = $.swfupload.getInstance('#swfupload-control');
 		try {
 			var percent = Math.ceil((bytesLoaded / bytesTotal) * 100);
-			file.id = "singlefile";
+			file.id = "singlefile";	
 			var progress = new FileProgress(file, swfu.customSettings.progressTarget);
 			var animPic = document.getElementById("loadanim");
 			if (animPic != null) {
 			  animPic.style.display = 'block';
-			}
+			}			
 			progress.setStatus("Uploading..."+(isMacUser && file.size < MacMinSizeUpload ? ' ...Finishing up, 10 second delay' : ''));
 			progress.setProgress(percent);
 			$('#fsUploadProgress2').text(percent+'%');
@@ -243,7 +286,7 @@ $(function(){
 		} catch (ex) {
 			swfu.debug(ex);
 		}
-	})
+	})	
 	.bind('uploadSuccess', function(event, file, serverData){
 		var swfu = $.swfupload.getInstance('#swfupload-control');
 		try {
@@ -252,7 +295,7 @@ $(function(){
 			progress.setComplete();
 			progress.setStatus("Complete.");
 			progress.toggleCancel(false);
-
+	 
 			if (serverData === " ") {
 				swfu.customSettings.upload_successful = false;
 			} else {
@@ -263,7 +306,7 @@ $(function(){
 			swfu.debug(ex);
 		}
 	})
-
+	
 	.bind('uploadComplete', function(event, file){
 		// upload has completed, try the next one in the queue
 		//$(this).swfupload('startUpload');
@@ -273,25 +316,25 @@ $(function(){
 				swfu.setButtonDisabled(true);
 				//CALL BACK uploadDone(); OR
 				//FORM SUBMIT document.forms[0].submit();
-				alert('Congratutlaions Your File Has Been Uploaded!!');
+				alert('DONE!!');
 			} else {
 				file.id = "singlefile";	// This makes it so FileProgress only makes a single UI element, instead of one for each file
 				var progress = new FileProgress(file, swfu.customSettings.progress_target);
 				progress.setError();
 				progress.setStatus("File rejected");
 				progress.toggleCancel(false);
-
+				
 				var txtFileName = document.getElementById("txtFileName");
 				txtFileName.value = "";
 				validateForm();
 				alert("There was a problem with the upload.\nThe server did not accept it.");
 			}
 		} catch (e) {
-		}
+		}	
 	})
 
-/// END
-});
+/// END	
+});	
 
 function updateDisplay(swfu,file) {
   // isMacUser Patch Begin
@@ -318,67 +361,70 @@ function updateDisplay(swfu,file) {
   } // isMacUser Patch End
 }
 
+// this should *not* be needed, just testing an idea 
+function pauseProcess(millis) {
+  var sDate = new Date();
+  var cDate = null;
+
+  do { 
+    cDate = new Date(); 
+  } while(cDate-sDate < millis);
+}
+function validateForm() {
+	//validate here
+}
 </script>
 </head>
 
-    <body>
-        <?php
-        include 'database.inc.php';
-        include 'login_status.inc.php';
-        include 'menu.php';?>
-              <div style="width:1200px; margin-left: auto; margin-right: auto; border: thin solid; height: 800px;">
-        <div id="content" style="float:left; text-align: center; width: 40%; margin-left: auto; margin-right: auto">
+<body>
+<div id="content">
+	<h2>Classic Form Demo</h2>
+	<form id="form1" action="#" enctype="multipart/form-data" method="post">
 
-            <h2>Prześlij Pliki</h2>
-	Zalogowany jako: <?php
-            if ($zalogowany) {
-                echo $ulogin;
-            }else {
-                echo "<a id='logup' href='zaloguj.php'>NIE ZALOGOWANY</a>";
-}
-mysql_close($mysql_db_link)
-?>
-        
-          
-                <p>Wybierz pliki do przesłania na serwer. Możesz wybrać wiele plików za jednym razem przytrzymując shift lub ctrl. Maksymalny rozmiar pliku to 1GB. Wysyłając pliki akceptujesz <a href="rules.php">regulamin serwisu</a>.</p>
-<div>
+		<div class="fieldset">
+			<span class="legend">Submit your Application</span>
+			<table style="vertical-align:top;">
+				<tr>
+					<td><label for="lastname">Last Name:</label></td>
+					<td><input name="lastname" id="lastname" type="text" style="width: 200px" /></td>
+
+				</tr>
+				<tr>
+					<td><label for="firstname">First Name:</label></td>
+					<td><input name="firstname" id="firstname" type="text" style="width: 200px" /></td>
+				</tr>
+				<tr>
+					<td><label for="education">Education:</label></td>
+					<td><textarea name="education"  id="education" cols="0" rows="0" style="width: 400px; height: 100px;"></textarea></td>
+
+				</tr>
+				<tr>
+					<td><label for="txtFileName">Resume:</label></td>
+					<td>
+						<div>
 							<div>
-								<input type="text" id="txtFileName" disabled="true" style="border: solid 1px; background-color: #FFFFFF;" />
+								<input type="text" name="file" id="txtFileName" disabled="true" style="border: solid 1px; background-color: #FFFFFF;" />
 								<div id="swfupload-control" style="display:inline;"><input type="button" id="mybutton" /></div><div id="fsUploadProgress2" style="display:inline;"></div>
 							</div>
 							<div class="flash" id="fsUploadProgress">
 								<!-- This is where the file progress gets shown.  SWFUpload doesn't update the UI directly.
 											The Handlers (in handlers.js) process the upload events and make the UI updates -->
-							</div>
+							</div>                         
 							<input type="hidden" name="hidFileID" id="hidFileID" value="" />
 							<!-- This is where the file ID is stored after SWFUpload uploads the file and gets the ID back from upload.php -->
 						</div>
-					
-			<br />
-			<input type="submit" value="Upload" id="btnSubmit" />
+					</td>
 
-        </div><div style="float:right; width: 59%; height: 150px; margin-left: auto; margin-right: auto; margin-top: auto; margin-bottom: auto; font-size: large; text-align: center;"><img src="images/zarobek.gif" style="float: right;" /><span style="float: left; top: 40px;">Umieszczaj pliki, dziel się nimi i zarabiaj!<br />Dostaniesz pieniądze
-        za każdy megabajt ściągnięty z Twojego konta korzystając z transferu premium. Jeśli ktoś ściągnie 1GB (np. 1 film) dostaniesz za to 20gr. Jeśli ściągnie go 100 osób
-        dostaniesz za to aż 20zł!<img src="images/kasa150px.gif" style="float: right;" /></span></div>
-                   <div style="float:right; width: 40%; margin-left: auto; margin-right: 15%; margin-top: 20px;"> <div style="font-size:18px; with:800px; margin-left:auto; margin-right:auto; text-align:left">Co miesiąc najaktywniejsi użytkownicy dostają od nas nagrody. W tym miesiącu do wygrania:<ul><li>Odtwarzacz MP3 <b style="color:red">Apple iPod Nano 8GB</b> (miejsce 1.),</li>
-    <li><b style="color:red">Pendrive Kingston Datatraveler DT100 8GB</b> (miejsce 2.)</li><li>oraz pakiety transferu premium <b style="color:red">200GB</b> (miejsce 3.),</li><li><b style="color:red">100GB</b> (miejsce 4.),</li><li><b style="color:red">50GB</b> (miejsce 5.),</li><li><b style="color:red">10GB</b> (miejsce 6.)</li><li>i <b style="color:red">5GB</b> (miejsce 7.)</li></ul> Nagrody są przyznawane o północy ostatniego dnia każdego miesiąca.<br /><br />
-    Co zrobić, aby wygrać?<br />
-    Wystarczy się zarejestrować (rejestracja jest darmowa) i aktywnie korzystać z serwisu polskirapid.pl. Za każdy wysłany megabajt dostajesz 1Pp (punkt premium). Jeśli ktoś ściąga za darmo plik wysłany przez Ciebie to za każdy ściągnięty megabajt również
-    dostajesz 1Pp. Jeśli ktoś ściąga Twoje dane używając płatnego transferu premium to za każdy ściągnięty megabajt dostajesz 2Pp. Jeśli sam ściągasz korzystając z transferu
-    premium to również dostajesz 2Pp za każdy megabajt. To takie proste. Nagrody są rozdawane wg klasyfikacji dokładnie o północy
-    ostatniego dnia każdego miesiąca. Wtedy też punkty zostają wyzerowana, aby w każdym miesiącu każdy miał równe szanse. <a href="rules.php#konkurs">Regulamin konkursu</a>.
-</div></div>
-            </div>
-        
-      
-        <script type="text/javascript">
-var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-</script>
-<script type="text/javascript">
-try {
-var pageTracker = _gat._getTracker("UA-329354-6");
-pageTracker._trackPageview();
-} catch(err) {}</script>
-    </body>
+				</tr>
+				<tr>
+					<td><label for="references">References:</label></td>
+					<td><textarea name="references" id="references" cols="0" rows="0" style="width: 400px; height: 100px;"></textarea></td>
+				</tr>
+			</table>
+			<br />
+			<input type="submit" value="Submit Application" id="btnSubmit" />
+		</div>
+	</form>
+</div>
+</body>
 </html>
