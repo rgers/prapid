@@ -1,0 +1,4 @@
+<?php
+$storagepath="../../storage/";
+$filesonpage = 50;
+?>

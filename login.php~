@@ -1,0 +1,19 @@
+<?php
+include 'database.inc.php';
+include 'vars.inc.php'; 
+$ulogin = $_POST["login"];
+$upassword = $_POST["password"];
+$query = "SELECT * FROM users WHERE login='$ulogin'";
+$result=mysql_query($query);
+echo mysql_error();
+flush();
+$passindb=mysql_result($result,0,"password");
+if (md5($upassword)==$passindb) {
+$newsid = md5(time().$upassword.$ulogin);
+setcookie("polskirapid",$newsid, 0);
+$query = "UPDATE users SET sid='".$newsid."' WHERE login='".$ulogin."'";
+mysql_query($query);
+header( 'Location: http://'.$domain.'/user.php' ) ;
+}else{echo "BAD PASS";}
+mysql_close();
+?>

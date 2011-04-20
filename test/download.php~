@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0
+Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-
+transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;
+charset=utf-8" />
+<title>Profil Użytkownika</title>
+<link href="css/default.css" rel="stylesheet" type="text/css" />
+	<style type="text/css">
+		 table td {
+			width: 250px;
+			white-space: nowrap;
+			padding-right: 5px;
+		}
+		 table tr:nth-child(2n+1) {
+			background-color: #EEEEEE;
+		}
+		 table td:first-child {
+			font-weight: bold;
+		}
+
+table td:nth-child(2) {
+			font-weight: bold;
+}
+		 table td:nth-child(3) {
+			text-align: right;
+			font-family: monospaced;
+		}
+
+	</style>
+</head>
+<body>
+<?php
+ob_start();
+include 'database.inc.php';
+include 'login_status.inc.php';
+include 'vars.inc.php';
+$fid=$_GET['plik'];
+if ($bw>0) 
+{
+header( 'Location: http://'.$domain.'/dl.php?plik='.$_GET['plik'] ) ;
+}
+
+$authkey=md5(time().$down_ip_addr."bongobongo");
+$query = "SELECT * FROM files WHERE id='$fid'";
+$result = mysql_query($query);
+$num=mysql_numrows($result);
+if ($num>0) {
+$filename = mysql_result($result,0,"name");
+$filesize = mysql_result($result,0,"size");
+$abuse = mysql_result($result,0,"abuse");
+echo "Plik: ".$filename."<br />";
+echo "Rozmiar: ".$filesize."<br /><br />";
+if ($abuse==1) {
+die("ABUSE");}
+echo "<a href='abuse.php?plik=".$_GET['plik']."'>Zgłoś nadużycie</a>";
+}else{
+die("Plik nie znaleziony.");}
+$query = "SELECT * FROM clients WHERE ip='".$down_ip_addr."'";
+$result = mysql_query($query);
+$num=mysql_numrows($result);
+if ($num>0) {
+$lasttime = mysql_result($result,0,"time");
+$diff = time() - $lasttime;
+if ($diff<$filesize/50000) {
+die("WAIT!".time());
+}
+
+$query = "UPDATE clients SET time='".time()."', fid='$fileid', authkey='$authkey' WHERE ip='$down_ip_addr'";
+mysql_query($query);
+}else{
+$query = "INSERT INTO clients VALUES ('".$down_ip_addr."','".time()."','".$fileid."', '".$authkey."')";
+mysql_query($query);}
+
+mysql_close();
+
+ob_end_flush();
+?> 
+
+<form action="dl.php"
+method="GET">
+<input name="plik" type="hidden" value="<?php echo $_GET['plik'];?>" /><br />
+<input name="authkey" type="hidden" value="<?php echo $authkey;?>" /><br />
+<input type="submit" value="Ściągnij Plik" />
+</form>
+
+

@@ -1,0 +1,14 @@
+function wyplata_clk()
+     {
+var emilval;
+emilval=$("#emil").val();
+var jsstring;
+jsstring = '{ "emil": "' + emilval + '"}';
+document.getElementById("wyplata_txt").innerHTML=jsstring;
+         $.post("wyplac.php",JSON.parse(jsstring), function(retval)
+     {
+
+document.getElementById("wyplata_txt").innerHTML=retval;
+
+     }, "text"); 
+     }

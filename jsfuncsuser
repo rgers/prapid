@@ -1,0 +1,7 @@
+$("a#wyplata").fancybox({
+		'hideOnContentClick': false,
+                'titleShow': false,
+                'autoDimensions': false,
+                'width': 350,
+                'height': 120
+	});

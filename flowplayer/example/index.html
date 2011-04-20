@@ -1,0 +1,14 @@
+<script type='text/javascript' src='swfobject.js'></script>
+
+<div id='mediaspace'>This text will be replaced</div>
+
+<script type='text/javascript'>
+  var so = new SWFObject('player.swf','ply','470','290','9','#ffffff');
+  so.addParam('allowfullscreen','true');
+  so.addParam('allowscriptaccess','always');
+  so.addParam('wmode','opaque');
+  so.addVariable('file','video.f4v');
+so.addVariable('bufferlength','10');
+  so.addVariable('streamer','rtmp://polskirapid.pl/flvplayback');
+  so.write('mediaspace');
+</script>

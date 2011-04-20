@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0
+Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-
+transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-type" content="text/html;
+charset=utf-8" />
+<title>Regulamin</title>
+</head>
+<body>
+<?php
+include 'database.inc.php';
+include 'login_status.inc.php';
+include 'vars.inc.php';
+include 'menu.php';
+?>
+Regulamin<br />
+<br />
+    Administratorem serwisu PolskiRapid.pl jest MojaFirma z siedzibą w Kozerach (05-825), ul. Urocza 42, posiadająca NIP: 738-148-82-83 oraz REGON: 140024615.<br />
+<br />
+    Użytkowanie serwisu PolskiRadpid.pl jest równoznaczne z akceptacją i przestrzeganiem regulaminu, niezależnie od faktu rejestracji.<br />
+
+    Zgodnie z art. 14 ustawy o świadczeniu usług drogą elektroniczną administrator PolskiRapid.pl nie ponosi odpowiedzialności za przechowywane dane.
+
+    Właściciel serwisu PolskiRapid.pl ma prawo do usuwania plików bez wcześniejszego powiadomienia właścicieli umieszczonych plików i osób postronnych
+
+    Pliki o zawartości łamiącej prawo w tym również prawo autorskie będą usuwane a ich umieszczanie w serwisie jest surowo zabronione
+    Niedopuszczalne jest wgrywanie plików z nielegalną zawartością takich jak pornografia dziecięca, materiały rasistowskie oraz nielegalnych kopii materiałów chronionych prawem autorskim.
+
+    Wszelkie naruszenia praw autorskich prosimy kierować na abuse@polskirapid.pl
+
+    Regulamin może w każdej chwili zostać zmieniony lub poprawiony w celu dostosowania do aktualnych warunków prawnych i technicznych.
+
+    Użytkownik jest zobowiązany we własnym zakresie do sprawdzania jego aktualnej wersji.
+
+    Obowiązkiem każdego użytkownika jest znajomość aktualnego regulaminu.
+</body>
+</html>

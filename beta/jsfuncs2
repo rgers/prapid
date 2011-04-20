@@ -1,0 +1,23 @@
+
+
+        $("a#logup").fancybox({
+		'hideOnContentClick': false,
+                'titleShow': false,
+                'autoDimensions': false,
+                'width': 350,
+                'height': 120
+	});
+        $("a#logmenu").fancybox({
+		'hideOnContentClick': false,
+                'titleShow': false,
+                'autoDimensions': false,
+                'width': 350,
+                'height': 120
+	});
+        $("a#addmenu").fancybox({
+		'hideOnContentClick': false,
+                'titleShow': false,
+                'autoDimensions': false,
+                'width': 350,
+                'height': 140
+	});

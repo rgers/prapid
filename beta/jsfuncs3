@@ -1,0 +1,30 @@
+});
+     function emailchg()
+     {
+         $.post("loginemailchk.php",$("#loginform").serialize(), function(retval)
+     {
+       document.getElementById("tere").innerHTML=retval;
+     }, "text");
+     }
+
+ function loginchk()
+     {
+         $.post("loginchk.php",$("#loginform").serialize(), function(retval)
+     {
+if (retval=="OK")
+{
+document.getElementById("tere").innerHTML=retval;
+       document.getElementById("loginform").submit();
+}else{
+document.getElementById("tere").innerHTML=retval;
+}
+     }, "text");
+     }
+
+      function emailvrfy()
+     {
+         $.post("validateemail.php",$("#regform").serialize(), function(retval)
+     {
+       document.getElementById("bumbum").innerHTML=retval;
+     }, "text");
+}
